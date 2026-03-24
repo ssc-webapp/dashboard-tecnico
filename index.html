@@ -3,179 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSC Gourmet - Gestión Técnica</title>
+    <title>SSC Gourmet - Tech Dashboard</title>
     <!-- jsPDF para generación de reportes -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
-            --primary: #1a3a2a; /* Verde oscuro SSC */
-            --primary-light: #2c5a43;
-            --secondary: #d4a373; /* Tono café claro de acento */
-            --bg-color: #fcfbf9; /* Crema muy claro */
-            --card-bg: #ffffff;
-            --text-main: #333333;
-            --text-light: #666666;
-            --border-color: #e0e0e0;
-            --danger: #d9534f;
-            --warning: #f0ad4e;
-            --success: #5cb85c;
+            color-scheme: dark;
+            --bg-color: #040d1a; /* Fondo principal muy oscuro */
+            --glass-bg: rgba(16, 33, 54, 0.4); /* Fondo de tarjetas tipo vidrio */
+            --glass-border: rgba(56, 189, 248, 0.2); /* Borde celeste transparente */
+            --primary: #38bdf8; /* Azul Celeste (Tech) */
+            --primary-glow: rgba(56, 189, 248, 0.5);
+            --primary-dark: rgba(2, 132, 199, 0.5);
+            --secondary: #0ea5e9;
+            --text-main: #f8fafc;
+            --text-light: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        
+        body { 
+            background: linear-gradient(135deg, #020617, #0a192f, #020617);
+            background-attachment: fixed;
+            color: var(--text-main); 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        /* Glassmorphism Utilities */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+        }
 
         /* Sidebar Navegación */
-        .sidebar { width: 250px; background-color: var(--primary); color: white; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-header h1 { font-size: 1.2rem; letter-spacing: 1px; }
-        .sidebar-header p { font-size: 0.8rem; opacity: 0.7; }
-        .nav-links { list-style: none; padding: 10px 0; flex-grow: 1; }
-        .nav-links li { padding: 15px 20px; cursor: pointer; transition: background 0.3s; display: flex; align-items: center; gap: 10px; }
-        .nav-links li:hover, .nav-links li.active { background-color: var(--primary-light); border-left: 4px solid var(--secondary); }
+        .sidebar { width: 260px; display: flex; flex-direction: column; border-right: 1px solid var(--glass-border); background: rgba(4, 13, 26, 0.8); backdrop-filter: blur(20px); z-index: 10; }
+        .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 1px solid var(--glass-border); }
+        .sidebar-header h1 { font-size: 1.5rem; letter-spacing: 2px; color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); margin-bottom: 5px; }
+        .sidebar-header p { font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
+        .nav-links { list-style: none; padding: 20px 0; flex-grow: 1; }
+        .nav-links li { padding: 15px 25px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 15px; font-weight: 500; color: var(--text-light); }
+        .nav-links li:hover { background: var(--primary-dark); color: white; }
+        .nav-links li.active { background: rgba(56, 189, 248, 0.15); border-left: 4px solid var(--primary); color: var(--primary); text-shadow: 0 0 8px var(--primary-glow); }
 
         /* Contenido Principal */
         .main-content { flex-grow: 1; overflow-y: auto; padding: 30px; position: relative; }
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        h2.tab-title { margin-bottom: 20px; color: var(--primary); font-size: 1.8rem; border-bottom: 2px solid var(--primary); padding-bottom: 10px; display: inline-block; }
+        h2.tab-title { margin-bottom: 25px; color: var(--text-main); font-size: 1.8rem; font-weight: 300; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        h2.tab-title::before { content: ''; display: inline-block; width: 8px; height: 24px; background: var(--primary); border-radius: 4px; box-shadow: 0 0 10px var(--primary-glow); }
 
-        /* Tarjetas (Cards) */
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .metric-card { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; border-top: 4px solid var(--primary); }
-        .metric-card h3 { font-size: 0.9rem; color: var(--text-light); text-transform: uppercase; }
-        .metric-card .number { font-size: 2.5rem; font-weight: bold; color: var(--primary); margin-top: 10px; }
+        /* Dashboard Metrics */
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { padding: 20px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; }
+        .metric-card::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--primary); }
+        .metric-card.danger::after { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        .metric-card.warning::after { background: var(--warning); box-shadow: 0 0 10px var(--warning); }
+        .metric-card.success::after { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        
+        .metric-card h3 { font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 10px; }
+        .metric-card .number { font-size: 2.8rem; font-weight: 300; color: var(--text-main); }
+        .metric-card .number.highlight { color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); font-weight: bold; }
 
         /* Paneles Duales */
-        .dual-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 200px); }
-        .panel { background: var(--card-bg); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 20px; overflow-y: auto; }
+        .dual-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; align-items: start; }
+        .panel { padding: 25px; max-height: 500px; overflow-y: auto; }
+        .panel h3 { margin-bottom: 20px; color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Mapa */
-        #map { width: 100%; height: 100%; min-height: 400px; border-radius: 8px; background: #eaeaea; }
-
-        /* Alertas List */
-        .alert-item { padding: 15px; border-left: 5px solid var(--border-color); background: #fafafa; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        /* Listas / Alertas */
+        .alert-item { padding: 15px; border-left: 4px solid var(--glass-border); background: rgba(0,0,0,0.2); margin-bottom: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s; }
+        .alert-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.05); }
         .alert-item.VENCIDA { border-left-color: var(--danger); }
         .alert-item.POR_VENCER { border-left-color: var(--warning); }
         .alert-item.AL_CORRIENTE { border-left-color: var(--success); }
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; color: white; }
-        .badge.VENCIDA { background: var(--danger); }
-        .badge.POR_VENCER { background: var(--warning); }
-        .badge.AL_CORRIENTE { background: var(--success); }
+        .alert-item strong { color: #fff; }
+        
+        .badge { padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .badge.VENCIDA { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid var(--danger); }
+        .badge.POR_VENCER { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid var(--warning); }
+        .badge.AL_CORRIENTE { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid var(--success); }
+        .badge.INFO { background: rgba(56, 189, 248, 0.2); color: var(--primary); border: 1px solid var(--primary); }
 
-        /* Formularios */
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
-        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        /* Formularios Tech */
+        .form-section { padding: 25px; margin-bottom: 25px; }
+        .form-section-title { font-size: 1.1rem; color: var(--primary); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--glass-border); text-transform: uppercase; letter-spacing: 1px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Checkboxes custom */
-        .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 5px; }
-        .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.9rem; }
+        .form-control { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 6px; color: white; font-size: 1rem; transition: all 0.3s; }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); background: rgba(0,0,0,0.5); }
+        .form-control:disabled, .form-control[readonly] { background: rgba(255,255,255,0.02); color: #666; cursor: not-allowed; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        /* Tablas */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background-color: var(--primary); color: white; font-weight: normal; font-size: 0.9rem; }
-        tr:hover { background-color: #f5f5f5; }
+        /* Checkboxes custom tech */
+        .checkbox-group { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 5px; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95rem; color: #cbd5e1; }
+        .checkbox-label input[type="radio"], .checkbox-label input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; }
+        
+        /* Tablas DataGrid */
+        .table-container { overflow-x: auto; margin-top: 15px; border-radius: 8px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+        th { background: rgba(56, 189, 248, 0.05); color: var(--primary); font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        tr:hover td { background: rgba(56, 189, 248, 0.05); }
+
+        /* Equipos Grid */
+        .equipos-container { border: 1px solid var(--glass-border); border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
+        .equipos-row { display: grid; grid-template-columns: 120px 180px 1fr; border-bottom: 1px solid var(--glass-border); }
+        .equipos-row:last-child { border-bottom: none; }
+        .equipos-header { background: rgba(56, 189, 248, 0.1); color: var(--primary); font-size: 0.8rem; text-transform: uppercase; font-weight: bold; }
+        .equipos-cell { padding: 12px; border-right: 1px solid var(--glass-border); display: flex; align-items: center; }
+        .equipos-cell:last-child { border-right: none; }
+        .equipos-cell input { width: 100%; border: 1px solid transparent; background: rgba(0,0,0,0.2); color: white; padding: 8px; border-radius: 4px; transition: 0.3s; }
+        .equipos-cell input:focus { border-color: var(--primary); background: rgba(0,0,0,0.5); outline: none; }
 
         /* Botones */
-        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; transition: background 0.3s; font-weight: bold; display: inline-block; text-align: center; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-light); }
-        .btn-secondary { background: var(--secondary); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
-        .actions-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .btn { padding: 12px 24px; border: 1px solid transparent; border-radius: 6px; cursor: pointer; font-size: 0.95rem; transition: all 0.3s; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-primary { background: var(--primary); color: #020617; box-shadow: 0 0 15px rgba(56,189,248,0.4); }
+        .btn-primary:hover { background: #7dd3fc; box-shadow: 0 0 25px rgba(56,189,248,0.6); transform: translateY(-2px); }
+        .btn-secondary { background: rgba(56,189,248,0.1); border-color: var(--primary); color: var(--primary); }
+        .btn-secondary:hover { background: rgba(56,189,248,0.2); transform: translateY(-2px); }
+        .btn-danger { background: rgba(239,68,68,0.1); border-color: var(--danger); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; box-shadow: 0 0 15px rgba(239,68,68,0.5); }
+        .btn-sm { padding: 8px 15px; font-size: 0.8rem; }
+        
+        .actions-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 
         /* Modal */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; }
-        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: var(--text-light); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal { padding: 35px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-close { position: absolute; top: 20px; right: 25px; font-size: 1.8rem; cursor: pointer; color: var(--text-light); transition: 0.3s; }
+        .modal-close:hover { color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
 
-        /* Sub-secciones formulario visita */
-        .form-section { background: white; padding: 20px; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 20px; }
-        .form-section-title { font-size: 1.1rem; color: var(--primary); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
-        
-        .equipos-container { border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden; margin-bottom: 15px; }
-        .equipos-row { display: grid; grid-template-columns: 120px 150px 1fr; border-bottom: 1px solid var(--border-color); }
-        .equipos-row:last-child { border-bottom: none; }
-        .equipos-header { background: #f0f0f0; font-weight: bold; font-size: 0.8rem; }
-        .equipos-cell { padding: 10px; border-right: 1px solid var(--border-color); display: flex; align-items: center; }
-        .equipos-cell:last-child { border-right: none; }
-        .equipos-cell input { width: 100%; border: 1px solid #ddd; padding: 5px; }
-
-        /* Toast Message Box */
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: var(--primary); color: white; padding: 15px 20px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transform: translateX(100%); transition: all 0.3s ease; }
+        /* Toast */
+        #toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; }
+        .toast { background: rgba(16, 33, 54, 0.9); border: 1px solid var(--primary); border-left: 4px solid var(--primary); color: white; padding: 15px 25px; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); opacity: 0; transform: translateX(100%); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; gap: 10px; font-weight: 500;}
         .toast.show { opacity: 1; transform: translateX(0); }
-        .toast.error { background: var(--danger); }
+        .toast.error { border-color: var(--danger); border-left-color: var(--danger); }
 
-        /* Loader */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Loader Neon */
+        .loader-wrapper { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .loader { width: 50px; height: 50px; border: 3px solid rgba(56, 189, 248, 0.2); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; box-shadow: 0 0 20px var(--primary-glow); }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        @media (max-width: 768px) {
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(56,189,248,0.6); }
+
+        @media (max-width: 900px) {
             body { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; flex-direction: row; align-items: center; justify-content: space-between; padding: 0 10px; }
-            .nav-links { display: flex; overflow-x: auto; padding: 0; margin: 0; }
-            .nav-links li { padding: 10px; white-space: nowrap; }
-            .dual-panel { grid-template-columns: 1fr; height: auto; }
-            .form-row { grid-template-columns: 1fr; }
-            .equipos-row { grid-template-columns: 1fr; }
+            .sidebar { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; padding: 0 10px; border-right: none; border-bottom: 1px solid var(--glass-border); }
+            .sidebar-header { padding: 15px; border: none; text-align: left; }
+            .nav-links { display: flex; overflow-x: auto; padding: 0; }
+            .nav-links li { padding: 15px; white-space: nowrap; border-left: none; border-bottom: 2px solid transparent; }
+            .nav-links li.active { border-left: none; border-bottom: 2px solid var(--primary); background: transparent; }
+            .dual-panel { grid-template-columns: 1fr; }
+            .form-row, .equipos-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
     <!-- Sidebar -->
-    <nav class="sidebar">
+    <nav class="sidebar glass">
         <div class="sidebar-header">
             <h1>SSC GOURMET</h1>
             <p>Servicio Técnico</p>
         </div>
         <ul class="nav-links">
-            <li class="active" onclick="switchTab('monitoreo')">📊 Monitoreo</li>
+            <li class="active" onclick="switchTab('monitoreo')">📊 Dashboard</li>
             <li onclick="switchTab('registro')">📝 Registrar Visita</li>
             <li onclick="switchTab('historial')">🕒 Historial</li>
-            <li onclick="switchTab('catalogo')">🏢 Sucursales</li>
-            <li onclick="switchTab('reportes')">📁 Reportes</li>
+            <li onclick="switchTab('catalogo')">🏢 Catálogo</li>
+            <li onclick="switchTab('reportes')">📁 Exportación</li>
         </ul>
     </nav>
 
     <!-- Main Content -->
     <main class="main-content">
-        <div id="loader" class="loader"></div>
+        <div id="loader" class="loader-wrapper"><div class="loader"></div></div>
 
-        <!-- TAB 1: Monitoreo -->
+        <!-- TAB 1: Monitoreo (Dashboard Tech) -->
         <section id="tab-monitoreo" class="tab-content active">
-            <h2 class="tab-title">Panel de Monitoreo</h2>
+            <h2 class="tab-title">Panel de Control General</h2>
             
             <div class="metrics-grid">
-                <div class="metric-card">
-                    <h3>Sucursales Activas</h3>
-                    <div class="number" id="metric-activas">0</div>
+                <div class="metric-card glass">
+                    <h3>Padrón Activo</h3>
+                    <div class="number highlight" id="metric-activas">0</div>
                 </div>
-                <div class="metric-card" style="border-top-color: var(--danger);">
+                <div class="metric-card glass success">
+                    <h3>Cumplimiento</h3>
+                    <div class="number" id="metric-cumplimiento">0%</div>
+                </div>
+                <div class="metric-card glass danger">
                     <h3>Visitas Vencidas</h3>
-                    <div class="number" id="metric-vencidas" style="color: var(--danger);">0</div>
+                    <div class="number" id="metric-vencidas">0</div>
                 </div>
-                <div class="metric-card" style="border-top-color: var(--warning);">
-                    <h3>Por Vencer (≤ 3 días)</h3>
-                    <div class="number" id="metric-porvencer" style="color: var(--warning);">0</div>
+                <div class="metric-card glass warning">
+                    <h3>Alerta (≤ 3 días)</h3>
+                    <div class="number" id="metric-porvencer">0</div>
+                </div>
+                <div class="metric-card glass">
+                    <h3>Visitas Este Mes</h3>
+                    <div class="number" id="metric-visitas-mes">0</div>
+                </div>
+                <div class="metric-card glass">
+                    <h3>Equipos Revisados (Mes)</h3>
+                    <div class="number" id="metric-equipos">0</div>
                 </div>
             </div>
 
             <div class="dual-panel">
-                <div class="panel">
-                    <h3>Alertas de Sucursales</h3>
+                <div class="panel glass">
+                    <h3>Status de Sucursales</h3>
                     <div id="alertas-list" style="margin-top: 15px;">
-                        <p style="color: #666; text-align: center;">Cargando datos...</p>
+                        <p style="color: var(--text-light); text-align: center;">Cargando datos del servidor...</p>
                     </div>
                 </div>
-                <div class="panel" style="padding: 0;">
-                    <div id="map"></div>
+                <div class="panel glass">
+                    <h3>Actividad Reciente</h3>
+                    <div id="actividad-list" style="margin-top: 15px;">
+                        <p style="color: var(--text-light); text-align: center;">Cargando historial...</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -186,7 +248,7 @@
             
             <form id="form-visita" onsubmit="event.preventDefault(); submitVisita(false);">
                 
-                <div class="form-section">
+                <div class="form-section glass">
                     <h3 class="form-section-title">Motivo de Visita</h3>
                     <div class="checkbox-group" id="group-motivo">
                         <label class="checkbox-label"><input type="radio" name="motivo" value="Visita Preventiva" required> Visita Preventiva</label>
@@ -195,7 +257,7 @@
                     </div>
                 </div>
 
-                <div class="form-section">
+                <div class="form-section glass">
                     <h3 class="form-section-title">Datos de la Sucursal</h3>
                     <div class="form-row">
                         <div class="form-group">
@@ -228,12 +290,12 @@
                     </div>
                 </div>
 
-                <div class="form-section">
+                <div class="form-section glass">
                     <h3 class="form-section-title">Equipos Revisados</h3>
                     <div class="equipos-container">
                         <div class="equipos-row equipos-header">
                             <div class="equipos-cell">EQUIPO</div>
-                            <div class="equipos-cell">S/N</div>
+                            <div class="equipos-cell">S/N (Serial)</div>
                             <div class="equipos-cell">DESCRIPCIÓN / OBSERVACIONES</div>
                         </div>
                         <!-- Máquinas -->
@@ -245,15 +307,15 @@
                         <div class="equipos-row"><div class="equipos-cell">Molino 2</div><div class="equipos-cell"><input type="text" id="mol2_sn"></div><div class="equipos-cell"><input type="text" id="mol2_obs"></div></div>
                     </div>
 
-                    <h4 style="margin-top:15px; margin-bottom: 5px;">Tipo de Servicio</h4>
+                    <h4 style="margin-top:25px; margin-bottom: 10px; color: var(--primary); font-weight: normal; text-transform: uppercase; font-size: 0.9rem;">Tipo de Servicio</h4>
                     <div class="checkbox-group">
                         <label class="checkbox-label"><input type="checkbox" id="ts_espresso"> Espresso</label>
                         <label class="checkbox-label"><input type="checkbox" id="ts_filtro"> Filtro</label>
                         <label class="checkbox-label"><input type="checkbox" id="ts_metodos"> Métodos</label>
-                        <label class="checkbox-label"><input type="checkbox" id="ts_otro"> Otro: <input type="text" id="ts_otro_desc" style="border:none; border-bottom:1px solid #ccc; outline:none;"></label>
+                        <label class="checkbox-label"><input type="checkbox" id="ts_otro"> Otro: <input type="text" id="ts_otro_desc" style="border:none; border-bottom:1px solid var(--glass-border); background:transparent; color:white; outline:none; margin-left:10px; padding:2px 5px;"></label>
                     </div>
 
-                    <h4 style="margin-top:15px; margin-bottom: 5px;">Accesorios Utilizados</h4>
+                    <h4 style="margin-top:25px; margin-bottom: 10px; color: var(--primary); font-weight: normal; text-transform: uppercase; font-size: 0.9rem;">Accesorios Utilizados</h4>
                     <div class="checkbox-group">
                         <label class="checkbox-label"><input type="checkbox" id="acc_cafiza"> Cafiza</label>
                         <label class="checkbox-label"><input type="checkbox" id="acc_filtro"> Filtro Ciego</label>
@@ -263,7 +325,7 @@
                     </div>
                 </div>
 
-                <div class="form-section">
+                <div class="form-section glass">
                     <h3 class="form-section-title">Reporte Técnico</h3>
                     <div class="form-group">
                         <label>Resumen de Visita</label>
@@ -275,24 +337,24 @@
                     </div>
                 </div>
 
-                <div class="form-section">
-                    <h3 class="form-section-title">Comentarios y Calidad (Sección del Cliente)</h3>
-                    <label class="checkbox-label" style="margin-bottom: 10px;">
+                <div class="form-section glass">
+                    <h3 class="form-section-title">Comentarios y Calidad</h3>
+                    <label class="checkbox-label" style="margin-bottom: 15px;">
                         <input type="checkbox" id="has_comentarios" onchange="document.getElementById('v_comentarios').style.display = this.checked ? 'block' : 'none'"> 
                         ¿El cliente tiene comentarios o sugerencias sobre el sabor del café?
                     </label>
                     <textarea id="v_comentarios" class="form-control" rows="3" style="display: none;" placeholder="Descríbalos a continuación..."></textarea>
                 </div>
 
-                <div class="form-section">
+                <div class="form-section glass">
                     <div class="form-group">
-                        <label>Nombre del Asesor / Técnico</label>
+                        <label>Técnico / Asesor Asignado</label>
                         <input type="text" id="v_tecnico" class="form-control" required>
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 15px; justify-content: flex-end; margin-bottom: 50px;">
-                    <button type="submit" class="btn btn-secondary">Guardar Visita</button>
+                    <button type="submit" class="btn btn-secondary">Guardar Data</button>
                     <button type="button" class="btn btn-primary" onclick="submitVisita(true)">Guardar y Generar PDF</button>
                 </div>
             </form>
@@ -300,24 +362,24 @@
 
         <!-- TAB 3: Historial -->
         <section id="tab-historial" class="tab-content">
-            <h2 class="tab-title">Historial de Visitas</h2>
+            <h2 class="tab-title">Registro Histórico</h2>
             
-            <div class="actions-bar" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                    <select id="filt_cliente" class="form-control" style="width: auto;">
+            <div class="actions-bar glass" style="padding: 20px; border-radius: 8px;">
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center; width: 100%;">
+                    <select id="filt_cliente" class="form-control" style="width: auto; flex-grow: 1;">
                         <option value="">Todos los clientes</option>
                     </select>
-                    <select id="filt_motivo" class="form-control" style="width: auto;">
+                    <select id="filt_motivo" class="form-control" style="width: auto; flex-grow: 1;">
                         <option value="">Todos los motivos</option>
                         <option value="Visita Preventiva">Preventiva</option>
                         <option value="Atención a reporte">Atención a reporte</option>
                         <option value="Capacitación">Capacitación</option>
                     </select>
-                    <button class="btn btn-secondary btn-sm" onclick="loadHistorial()">Filtrar</button>
+                    <button class="btn btn-secondary" onclick="loadHistorial()">Aplicar Filtro</button>
                 </div>
             </div>
 
-            <div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <div class="table-container glass">
                 <table id="table-historial">
                     <thead>
                         <tr>
@@ -338,20 +400,20 @@
 
         <!-- TAB 4: Catálogo -->
         <section id="tab-catalogo" class="tab-content">
-            <h2 class="tab-title">Catálogo de Sucursales</h2>
+            <h2 class="tab-title">Gestión de Sucursales</h2>
             
             <div class="actions-bar">
-                <button class="btn btn-primary" onclick="openModalSucursal()">+ Nueva Sucursal</button>
+                <button class="btn btn-primary" onclick="openModalSucursal()">+ Alta de Sucursal</button>
             </div>
 
-            <div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <div class="table-container glass">
                 <table id="table-sucursales">
                     <thead>
                         <tr>
                             <th>Cliente</th>
                             <th>Sucursal</th>
-                            <th>Colonia</th>
-                            <th>Periodicidad</th>
+                            <th>Ubicación</th>
+                            <th>Frecuencia</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -365,23 +427,23 @@
 
         <!-- TAB 5: Reportes -->
         <section id="tab-reportes" class="tab-content">
-            <h2 class="tab-title">Reportes y Exportación</h2>
+            <h2 class="tab-title">Exportación de Datos</h2>
             
             <div class="metrics-grid">
-                <div class="panel">
-                    <h3>Reporte de Visitas (CSV)</h3>
-                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0;">Descarga el historial completo de visitas registradas en formato Excel/CSV.</p>
-                    <button class="btn btn-primary" onclick="exportCSV('visitas')">Descargar CSV</button>
+                <div class="panel glass">
+                    <h3>Data de Visitas (CSV)</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-light); margin: 10px 0 20px;">Descarga la base de datos completa de servicios realizados para análisis en Excel.</p>
+                    <button class="btn btn-primary" style="width:100%" onclick="exportCSV('visitas')">Generar CSV</button>
                 </div>
-                <div class="panel">
-                    <h3>Sucursales Vencidas (CSV)</h3>
-                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0;">Descarga la lista de sucursales que requieren atención inmediata.</p>
-                    <button class="btn btn-primary" style="background: var(--danger);" onclick="exportCSV('vencidas')">Descargar CSV</button>
+                <div class="panel glass">
+                    <h3 style="color: var(--danger)">Alerta de Vencidas (CSV)</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-light); margin: 10px 0 20px;">Extrae el listado urgente de sucursales que han superado su tolerancia de tiempo.</p>
+                    <button class="btn btn-danger" style="width:100%" onclick="exportCSV('vencidas')">Generar CSV</button>
                 </div>
-                <div class="panel">
-                    <h3>Estado del Padrón (CSV)</h3>
-                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0;">Descarga el catálogo completo de sucursales con su estatus actual.</p>
-                    <button class="btn btn-secondary" onclick="exportCSV('sucursales')">Descargar CSV</button>
+                <div class="panel glass">
+                    <h3 style="color: var(--warning)">Padrón Completo (CSV)</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-light); margin: 10px 0 20px;">Catálogo maestro de clientes, periodicidades y geolocalización.</p>
+                    <button class="btn btn-secondary" style="width:100%" onclick="exportCSV('sucursales')">Generar CSV</button>
                 </div>
             </div>
         </section>
@@ -390,9 +452,9 @@
 
     <!-- Modal Sucursal -->
     <div class="modal-overlay" id="modal-sucursal">
-        <div class="modal">
+        <div class="modal glass">
             <span class="modal-close" onclick="closeModal('modal-sucursal')">&times;</span>
-            <h3 id="modal-suc-title" style="margin-bottom: 20px; color: var(--primary);">Agregar Sucursal</h3>
+            <h3 id="modal-suc-title" style="margin-bottom: 25px; color: var(--primary); font-size: 1.5rem; letter-spacing: 1px;">Agregar Sucursal</h3>
             <form id="form-sucursal" onsubmit="event.preventDefault(); saveSucursal();">
                 <input type="hidden" id="s_id">
                 <div class="form-row">
@@ -419,15 +481,15 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Latitud</label><input type="text" id="s_lat" class="form-control" placeholder="Ej: 19.4326"></div>
-                    <div class="form-group"><label>Longitud</label><input type="text" id="s_lng" class="form-control" placeholder="Ej: -99.1332"></div>
+                    <div class="form-group"><label>Latitud (Opcional)</label><input type="text" id="s_lat" class="form-control" placeholder="Ej: 19.4326"></div>
+                    <div class="form-group"><label>Longitud (Opcional)</label><input type="text" id="s_lng" class="form-control" placeholder="Ej: -99.1332"></div>
                 </div>
                 <div class="form-group"><label>Equipos Instalados (Referencia)</label><input type="text" id="s_equipos" class="form-control" placeholder="Ej: Máquina La Marzocco, Molino Mahlkonig"></div>
                 <div class="form-row">
                     <div class="form-group"><label>Contacto</label><input type="text" id="s_contacto" class="form-control"></div>
                     <div class="form-group"><label>Teléfono</label><input type="text" id="s_telefono" class="form-control"></div>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Guardar Sucursal</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px; font-size: 1.1rem;">Guardar Registro</button>
             </form>
         </div>
     </div>
@@ -437,78 +499,44 @@
 
     <script>
         // ================= CONFIGURACIÓN =================
-        // 1. URL de Google Apps Script insertada
         const GAS_URL = "https://script.google.com/macros/s/AKfycbw2PgWxk7XKIP9oqrLMo_BhuiscTt75Xc_Ai2gH-D8yWB2Nu8Nrz_G6YHeIIZRlU1ssRA/exec";
-        
-        // 2. IMPORTANTE: Reemplaza "TU_KEY_AQUÍ" con tu API Key real de Google Maps para que el mapa funcione
-        const MAPS_API_KEY = "TU_KEY_AQUÍ"; 
         // =================================================
 
-        // Estado Global
-        let state = {
-            sucursales: [],
-            visitas: [],
-            monitoreo: [],
-            map: null,
-            markers: []
-        };
+        let state = { sucursales: [], visitas: [], monitoreo: [] };
 
-        // ================= INICIALIZACIÓN =================
         window.onload = async () => {
             setCurrentDateTime();
-            loadGoogleMaps();
             await fetchData();
             switchTab('monitoreo');
         };
-
-        function loadGoogleMaps() {
-            if (MAPS_API_KEY === 'TU_KEY_AQUÍ' || !MAPS_API_KEY) {
-                document.getElementById('map').innerHTML = '<div style="padding: 20px; text-align: center; color: #666; margin-top: 20vh;">Para habilitar el mapa, configura <br><b>MAPS_API_KEY</b> en el código fuente.</div>';
-                return;
-            }
-            window.initMap = initMap;
-            const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&callback=initMap`;
-            script.async = true;
-            document.head.appendChild(script);
-        }
 
         // ================= NAVEGACIÓN Y UI =================
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(`tab-${tabId}`).classList.add('active');
             
-            // Verificar si la llamada vino de un evento de clic o directamente del código
             if (typeof event !== 'undefined' && event && event.currentTarget) {
                 event.currentTarget.classList.add('active');
             } else {
                 const activeLi = document.querySelector(`.nav-links li[onclick*="${tabId}"]`);
                 if (activeLi) activeLi.classList.add('active');
             }
-
-            if (tabId === 'monitoreo' && state.map) {
-                // Un pequeño retraso asegura que el contenedor ya esté visible antes de redimensionar el mapa
-                setTimeout(() => google.maps.event.trigger(state.map, 'resize'), 100);
-            }
         }
 
-        function showLoader(show) {
-            document.getElementById('loader').style.display = show ? 'block' : 'none';
-        }
+        function showLoader(show) { document.querySelector('.loader-wrapper').style.display = show ? 'flex' : 'none'; }
 
         function showToast(message, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${isError ? 'error' : ''}`;
-            toast.textContent = message;
+            toast.innerHTML = isError ? `⚠️ ${message}` : `✓ ${message}`;
             container.appendChild(toast);
             
             setTimeout(() => toast.classList.add('show'), 10);
             setTimeout(() => {
                 toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
+                setTimeout(() => toast.remove(), 400);
             }, 3000);
         }
 
@@ -517,148 +545,138 @@
 
         function setCurrentDateTime() {
             const now = new Date();
+            // Corrección zona horaria local
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('v_fecha').value = now.toISOString().split('T')[0];
-            document.getElementById('v_hora').value = now.toTimeString().split(' ')[0].substring(0,5);
+            document.getElementById('v_hora').value = now.toISOString().split('T')[1].substring(0,5);
         }
 
-        // ================= PETICIONES AL BACKEND =================
+        // ================= API CALLS =================
         async function apiCall(data) {
             try {
                 const response = await fetch(GAS_URL, {
                     method: 'POST',
                     body: JSON.stringify(data),
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain evita preflight CORS
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
                 return await response.json();
             } catch (error) {
-                console.error("Error en API:", error);
-                showToast("Error de conexión con el servidor", true);
+                console.error("Error API:", error);
+                showToast("Error de red", true);
                 return null;
             }
         }
 
         async function fetchData() {
             showLoader(true);
+            const [resSucursales, resMonitoreo, resVisitas] = await Promise.all([
+                apiCall({ action: 'getSucursales', soloActivas: false }),
+                apiCall({ action: 'getMonitoreo' }),
+                apiCall({ action: 'getVisitas', filtros: {} })
+            ]);
             
-            // Cargar Catálogo
-            const resSucursales = await apiCall({ action: 'getSucursales', soloActivas: false });
             if (resSucursales && !resSucursales.error) {
                 state.sucursales = resSucursales;
                 renderSucursalesTable();
                 populateClientDropdowns();
             }
-
-            // Cargar Monitoreo
-            const resMonitoreo = await apiCall({ action: 'getMonitoreo' });
+            if (resVisitas && !resVisitas.error) {
+                state.visitas = resVisitas;
+                renderHistorialTable();
+            }
             if (resMonitoreo && !resMonitoreo.error) {
                 state.monitoreo = resMonitoreo;
                 renderMonitoreo();
             }
-
-            // Cargar Visitas
-            loadHistorial();
-            
             showLoader(false);
         }
 
-        // ================= TAB: MONITOREO =================
+        // ================= TAB: DASHBOARD (MONITOREO) =================
         function renderMonitoreo() {
             let activas = state.monitoreo.length;
             let vencidas = 0;
             let porVencer = 0;
             
-            const listEl = document.getElementById('alertas-list');
-            listEl.innerHTML = '';
+            const alertasEl = document.getElementById('alertas-list');
+            alertasEl.innerHTML = '';
 
             state.monitoreo.forEach(item => {
                 if (item.Estado === 'VENCIDA') vencidas++;
                 if (item.Estado === 'POR_VENCER') porVencer++;
 
-                // Crear tarjeta de alerta
+                // Generar tarjetas de alertas
+                let estadoText = item.Estado === 'AL_CORRIENTE' ? 'Al corriente' : 
+                                 item.Estado === 'VENCIDA' ? `Vencida (${item.Dias_Restantes * -1}d)` : `Vence: ${item.Dias_Restantes}d`;
+
                 const div = document.createElement('div');
                 div.className = `alert-item ${item.Estado}`;
-                
-                let estadoText = item.Estado === 'AL_CORRIENTE' ? 'Al corriente' : 
-                                 item.Estado === 'VENCIDA' ? `Vencida (${item.Dias_Restantes * -1} d)` : 
-                                 `Vence en ${item.Dias_Restantes} d`;
-
                 div.innerHTML = `
                     <div>
-                        <strong>${item.Cliente} - ${item.Sucursal}</strong><br>
-                        <span style="font-size: 0.8rem; color: #666;">Últ. visita: ${item.Ultima_Visita} | Frecuencia: ${item.Periodicidad}</span>
+                        <strong style="font-size: 0.95rem;">${item.Cliente} - ${item.Sucursal}</strong><br>
+                        <span style="font-size: 0.8rem; color: var(--text-light);"><i style="color:var(--primary)">Últ. visita:</i> ${item.Ultima_Visita}</span>
                     </div>
                     <span class="badge ${item.Estado}">${estadoText}</span>
                 `;
-                listEl.appendChild(div);
+                alertasEl.appendChild(div);
             });
+
+            // Cálculos del mes actual
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            let visitasMes = 0;
+            let equiposRevisados = 0;
+            
+            const actividadEl = document.getElementById('actividad-list');
+            actividadEl.innerHTML = '';
+            let countActividad = 0;
+
+            state.visitas.forEach(v => {
+                let vDateParts = v.Fecha.split('-');
+                if(vDateParts.length === 3) {
+                    let vYear = parseInt(vDateParts[0]);
+                    let vMonth = parseInt(vDateParts[1]) - 1; // 0-indexed
+                    if (vYear === currentYear && vMonth === currentMonth) {
+                        visitasMes++;
+                        if (v.Maquina1_SN) equiposRevisados++;
+                        if (v.Maquina2_SN) equiposRevisados++;
+                        if (v.Maquina3_SN) equiposRevisados++;
+                        if (v.Molino1_SN) equiposRevisados++;
+                        if (v.Molino2_SN) equiposRevisados++;
+                    }
+                }
+
+                // Generar lista de actividad (últimas 10)
+                if(countActividad < 15) {
+                    const actDiv = document.createElement('div');
+                    actDiv.className = `alert-item`;
+                    actDiv.innerHTML = `
+                        <div>
+                            <strong style="color:var(--text-main); font-size:0.9rem;">${v.Sucursal}</strong><br>
+                            <span style="font-size: 0.8rem; color: var(--text-light);">Técnico: <span style="color:var(--primary)">${v.Tecnico}</span></span>
+                        </div>
+                        <span class="badge INFO" style="font-size:0.7rem">${v.Fecha}</span>
+                    `;
+                    actividadEl.appendChild(actDiv);
+                    countActividad++;
+                }
+            });
+
+            if(countActividad === 0) actividadEl.innerHTML = '<p style="color: var(--text-light);">No hay visitas registradas aún.</p>';
+
+            // Calculo de cumplimiento
+            let cumplimiento = activas > 0 ? Math.round(((activas - vencidas) / activas) * 100) : 0;
+            const cumpliEl = document.getElementById('metric-cumplimiento');
+            cumpliEl.innerText = `${cumplimiento}%`;
+            if(cumplimiento < 70) cumpliEl.style.color = 'var(--danger)';
+            else if(cumplimiento < 90) cumpliEl.style.color = 'var(--warning)';
+            else cumpliEl.style.color = 'var(--success)';
 
             document.getElementById('metric-activas').innerText = activas;
             document.getElementById('metric-vencidas').innerText = vencidas;
             document.getElementById('metric-porvencer').innerText = porVencer;
-
-            updateMapPins();
-        }
-
-        function initMap() {
-            const cdmx = { lat: 19.4326, lng: -99.1332 };
-            state.map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 11,
-                center: cdmx,
-                styles: [{featureType: "poi", elementType: "labels", stylers: [{visibility: "off"}]}]
-            });
-            updateMapPins();
-        }
-
-        function updateMapPins() {
-            if (!state.map) return;
-            
-            // Limpiar markers anteriores
-            state.markers.forEach(m => m.setMap(null));
-            state.markers = [];
-
-            const infoWindow = new google.maps.InfoWindow();
-
-            state.monitoreo.forEach(item => {
-                if (!item.Latitud || !item.Longitud) return;
-                
-                let pinColor = item.Estado === 'VENCIDA' ? '#d9534f' : 
-                               item.Estado === 'POR_VENCER' ? '#f0ad4e' : '#5cb85c';
-                
-                // SVG icon para custom color
-                const svgMarker = {
-                    path: "M10.453 14.016l6.563-6.609-1.406-1.406-5.156 5.203-2.063-2.109-1.406 1.406zM12 2.016q2.906 0 4.945 2.039t2.039 4.945q0 1.453-0.727 3.328t-1.758 3.516-2.039 3.070-1.711 2.273l-0.75 0.797q-0.281-0.328-0.75-0.867t-1.688-2.156-2.133-3.141-1.664-3.445-0.75-3.375q0-2.906 2.039-4.945t4.945-2.039z",
-                    fillColor: pinColor,
-                    fillOpacity: 1,
-                    strokeWeight: 1,
-                    strokeColor: "#ffffff",
-                    rotation: 0,
-                    scale: 1.5,
-                    anchor: new google.maps.Point(12, 21),
-                };
-
-                const marker = new google.maps.Marker({
-                    position: { lat: parseFloat(item.Latitud), lng: parseFloat(item.Longitud) },
-                    map: state.map,
-                    icon: svgMarker,
-                    title: item.Sucursal
-                });
-
-                marker.addListener("click", () => {
-                    infoWindow.setContent(`
-                        <div style="padding: 5px; color: #333;">
-                            <h4 style="margin: 0 0 5px 0;">${item.Cliente}</h4>
-                            <b>${item.Sucursal}</b><br>
-                            <span style="font-size:0.8rem">${item.Direccion}</span><br>
-                            <hr style="margin: 5px 0">
-                            Estado: <b>${item.Estado.replace('_',' ')}</b><br>
-                            Última visita: ${item.Ultima_Visita}
-                        </div>
-                    `);
-                    infoWindow.open(state.map, marker);
-                });
-
-                state.markers.push(marker);
-            });
+            document.getElementById('metric-visitas-mes').innerText = visitasMes;
+            document.getElementById('metric-equipos').innerText = equiposRevisados;
         }
 
         // ================= TAB: CATÁLOGO SUCURSALES =================
@@ -670,10 +688,10 @@
                 const tr = document.createElement('tr');
                 const activa = s.Activa === true || s.Activa === 'true';
                 tr.innerHTML = `
-                    <td>${s.Cliente}</td>
+                    <td style="color:var(--text-main); font-weight:500;">${s.Cliente}</td>
                     <td>${s.Nombre_Sucursal}</td>
-                    <td>${s.Colonia}</td>
-                    <td>${s.Periodicidad}</td>
+                    <td style="color:var(--text-light); font-size:0.9rem">${s.Colonia}</td>
+                    <td><span style="color:var(--primary);">${s.Periodicidad}</span></td>
                     <td><span class="badge ${activa ? 'AL_CORRIENTE' : 'VENCIDA'}">${activa ? 'Activa' : 'Inactiva'}</span></td>
                     <td>
                         <button class="btn btn-sm btn-secondary" onclick='editSucursal(${JSON.stringify(s).replace(/'/g, "&#39;")})'>Editar</button>
@@ -728,21 +746,19 @@
 
             showLoader(true);
             const res = await apiCall({ action: 'saveSucursal', payload: payload });
-            showLoader(false);
-
             if (res && res.success) {
-                showToast("Sucursal guardada correctamente");
+                showToast("Sucursal guardada");
                 closeModal('modal-sucursal');
-                fetchData(); // Recargar todo
+                await fetchData(); 
             } else {
                 showToast("Error al guardar", true);
+                showLoader(false);
             }
         }
 
         // ================= TAB: REGISTRO DE VISITA =================
         function populateClientDropdowns() {
             const clientes = [...new Set(state.sucursales.filter(s => s.Activa === true || s.Activa === 'true').map(s => s.Cliente))].sort();
-            
             const vCliente = document.getElementById('v_cliente');
             const fCliente = document.getElementById('filt_cliente');
             
@@ -769,9 +785,7 @@
                 sucs.forEach(s => {
                     selectSucursal.innerHTML += `<option value="${s.ID_Sucursal}">${s.Nombre_Sucursal}</option>`;
                 });
-            } else {
-                selectSucursal.disabled = true;
-            }
+            } else { selectSucursal.disabled = true; }
         }
 
         function fillSucursalData() {
@@ -790,90 +804,68 @@
 
         function getFormVisitaData() {
             const motivoEl = document.querySelector('input[name="motivo"]:checked');
-            if(!motivoEl || !document.getElementById('v_sucursal').value) {
-                return null;
-            }
+            if(!motivoEl || !document.getElementById('v_sucursal').value) return null;
 
             const selSuc = document.getElementById('v_sucursal');
-            const nombreSucursal = selSuc.options[selSuc.selectedIndex].text;
-
             return {
                 Fecha: document.getElementById('v_fecha').value,
                 Hora: document.getElementById('v_hora').value,
                 ID_Sucursal: document.getElementById('v_id_sucursal').value,
                 Cliente: document.getElementById('v_cliente').value,
-                Sucursal: nombreSucursal,
+                Sucursal: selSuc.options[selSuc.selectedIndex].text,
                 Direccion: document.getElementById('v_direccion').value,
                 Motivo_Visita: motivoEl.value,
                 Tecnico: document.getElementById('v_tecnico').value,
                 
-                Maquina1_SN: document.getElementById('maq1_sn').value,
-                Maquina1_Obs: document.getElementById('maq1_obs').value,
-                Maquina2_SN: document.getElementById('maq2_sn').value,
-                Maquina2_Obs: document.getElementById('maq2_obs').value,
-                Maquina3_SN: document.getElementById('maq3_sn').value,
-                Maquina3_Obs: document.getElementById('maq3_obs').value,
+                Maquina1_SN: document.getElementById('maq1_sn').value, Maquina1_Obs: document.getElementById('maq1_obs').value,
+                Maquina2_SN: document.getElementById('maq2_sn').value, Maquina2_Obs: document.getElementById('maq2_obs').value,
+                Maquina3_SN: document.getElementById('maq3_sn').value, Maquina3_Obs: document.getElementById('maq3_obs').value,
+                Molino1_SN: document.getElementById('mol1_sn').value, Molino1_Obs: document.getElementById('mol1_obs').value,
+                Molino2_SN: document.getElementById('mol2_sn').value, Molino2_Obs: document.getElementById('mol2_obs').value,
                 
-                Molino1_SN: document.getElementById('mol1_sn').value,
-                Molino1_Obs: document.getElementById('mol1_obs').value,
-                Molino2_SN: document.getElementById('mol2_sn').value,
-                Molino2_Obs: document.getElementById('mol2_obs').value,
-                
-                Tipo_Espresso: document.getElementById('ts_espresso').checked,
-                Tipo_Filtro: document.getElementById('ts_filtro').checked,
-                Tipo_Metodos: document.getElementById('ts_metodos').checked,
-                Tipo_Otro: document.getElementById('ts_otro').checked,
+                Tipo_Espresso: document.getElementById('ts_espresso').checked, Tipo_Filtro: document.getElementById('ts_filtro').checked,
+                Tipo_Metodos: document.getElementById('ts_metodos').checked, Tipo_Otro: document.getElementById('ts_otro').checked,
                 Tipo_Otro_Descripcion: document.getElementById('ts_otro_desc').value,
-                
-                Acc_Cafiza: document.getElementById('acc_cafiza').checked,
-                Acc_FiltroCiego: document.getElementById('acc_filtro').checked,
-                Acc_Cepillo: document.getElementById('acc_cepillo').checked,
-                Acc_ManeralDoble: document.getElementById('acc_doble').checked,
+                Acc_Cafiza: document.getElementById('acc_cafiza').checked, Acc_FiltroCiego: document.getElementById('acc_filtro').checked,
+                Acc_Cepillo: document.getElementById('acc_cepillo').checked, Acc_ManeralDoble: document.getElementById('acc_doble').checked,
                 Acc_ManeralSencillo: document.getElementById('acc_sencillo').checked,
-                
-                Resumen_Visita: document.getElementById('v_resumen').value,
-                Cotizaciones_Pendientes: document.getElementById('v_cotizaciones').value,
+                Resumen_Visita: document.getElementById('v_resumen').value, Cotizaciones_Pendientes: document.getElementById('v_cotizaciones').value,
                 Comentarios_Cliente: document.getElementById('has_comentarios').checked ? document.getElementById('v_comentarios').value : ''
             };
         }
 
         async function submitVisita(generatePdf) {
             const data = getFormVisitaData();
-            if (!data) {
-                showToast("Por favor completa los campos requeridos", true);
-                return;
-            }
+            if (!data) { showToast("Completa Cliente, Sucursal y Motivo", true); return; }
 
             showLoader(true);
             const res = await apiCall({ action: 'saveVisita', payload: data });
-            showLoader(false);
-
             if (res && res.success) {
-                showToast("Visita registrada correctamente");
-                if (generatePdf) {
-                    generateFichaPDF(res.visita);
-                }
+                showToast("Data enviada exitosamente");
+                if (generatePdf) generateFichaPDF(res.visita);
                 document.getElementById('form-visita').reset();
                 setCurrentDateTime();
-                fetchData(); // Actualizar monitoreo y tablas
+                await fetchData(); 
                 switchTab('historial');
             } else {
-                showToast("Error al registrar visita", true);
+                showToast("Error en transmisión de datos", true);
+                showLoader(false);
             }
         }
 
         // ================= TAB: HISTORIAL =================
         async function loadHistorial() {
+            showLoader(true);
             const filtros = {
                 cliente: document.getElementById('filt_cliente').value,
                 motivo: document.getElementById('filt_motivo').value
             };
-
             const res = await apiCall({ action: 'getVisitas', filtros: filtros });
             if (res && !res.error) {
                 state.visitas = res;
                 renderHistorialTable();
             }
+            showLoader(false);
         }
 
         function renderHistorialTable() {
@@ -883,14 +875,12 @@
             state.visitas.forEach(v => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${v.Fecha}</td>
-                    <td>${v.Cliente}</td>
+                    <td style="color:var(--text-light)">${v.Fecha}</td>
+                    <td style="color:var(--text-main); font-weight:500;">${v.Cliente}</td>
                     <td>${v.Sucursal}</td>
-                    <td>${v.Motivo_Visita}</td>
-                    <td>${v.Tecnico}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick='generateFichaPDF(${JSON.stringify(v).replace(/'/g, "&#39;")})'>PDF</button>
-                    </td>
+                    <td><span class="badge INFO" style="background:transparent; color:var(--primary)">${v.Motivo_Visita}</span></td>
+                    <td style="color:var(--text-light)">${v.Tecnico}</td>
+                    <td><button class="btn btn-sm btn-primary" onclick='generateFichaPDF(${JSON.stringify(v).replace(/'/g, "&#39;")})'>Imprimir PDF</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -901,24 +891,14 @@
             let dataList = [];
             let filename = '';
 
-            if (type === 'visitas') {
-                dataList = state.visitas;
-                filename = 'historial_visitas.csv';
-            } else if (type === 'sucursales') {
-                dataList = state.sucursales;
-                filename = 'padron_sucursales.csv';
-            } else if (type === 'vencidas') {
-                dataList = state.monitoreo.filter(m => m.Estado === 'VENCIDA');
-                filename = 'sucursales_vencidas.csv';
-            }
+            if (type === 'visitas') { dataList = state.visitas; filename = 'SSC_Export_Visitas.csv'; } 
+            else if (type === 'sucursales') { dataList = state.sucursales; filename = 'SSC_Padron_Completo.csv'; } 
+            else if (type === 'vencidas') { dataList = state.monitoreo.filter(m => m.Estado === 'VENCIDA'); filename = 'SSC_Alerta_Vencidas.csv'; }
 
-            if (dataList.length === 0) {
-                showToast("No hay datos para exportar", true);
-                return;
-            }
+            if (dataList.length === 0) { showToast("Dataset vacío", true); return; }
 
             const headers = Object.keys(dataList[0]);
-            let csvContent = "data:text/csv;charset=utf-8," 
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF" // uFEFF ensures Excel reads UTF8 accents correctly
                 + headers.join(",") + "\n"
                 + dataList.map(row => headers.map(h => `"${(row[h]||'').toString().replace(/"/g, '""')}"`).join(",")).join("\n");
 
@@ -936,108 +916,61 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            // Constantes layout
             const marginL = 15;
             const pageWidth = 180;
             let y = 20;
 
-            // --- HEADER ---
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold"); doc.setFontSize(22);
             doc.text("VISITA DE SERVICIO", marginL, y);
             y += 6;
-            doc.setFontSize(12);
-            doc.text("FICHA DE REPORTE", marginL, y);
-            
-            doc.setFontSize(14);
-            doc.text("STONE STREET · COPERACO", marginL + pageWidth, y - 6, { align: 'right' });
-            
+            doc.setFontSize(12); doc.text("FICHA DE REPORTE", marginL, y);
+            doc.setFontSize(14); doc.text("STONE STREET · COPERACO", marginL + pageWidth, y - 6, { align: 'right' });
             y += 12;
 
-            // --- MOTIVO VISITA ---
-            doc.setFillColor(30, 30, 30);
-            doc.rect(marginL, y, pageWidth, 10, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(10);
+            doc.setFillColor(30, 30, 30); doc.rect(marginL, y, pageWidth, 10, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFontSize(10);
             doc.text("MOTIVO DE VISITA |", marginL + 3, y + 6.5);
             
             const pX = marginL + 45;
             doc.text(`[ ${v.Motivo_Visita === 'Visita Preventiva' ? 'X' : ' '} ] Visita Preventiva`, pX, y + 6.5);
             doc.text(`[ ${v.Motivo_Visita === 'Atención a reporte' ? 'X' : ' '} ] Atención a reporte`, pX + 40, y + 6.5);
             doc.text(`[ ${v.Motivo_Visita === 'Capacitación' ? 'X' : ' '} ] Capacitación`, pX + 85, y + 6.5);
-            
-            y += 15;
-            doc.setTextColor(0, 0, 0);
+            y += 15; doc.setTextColor(0, 0, 0);
 
-            // --- DATOS SUCURSAL ---
-            doc.setFillColor(30, 30, 30);
-            doc.rect(marginL, y, pageWidth, 8, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.text("DATOS DE LA SUCURSAL", marginL + 3, y + 5.5);
-            y += 8;
-
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("helvetica", "normal");
-            doc.rect(marginL, y, pageWidth, 16); // Borde exterior
-            
+            doc.setFillColor(30, 30, 30); doc.rect(marginL, y, pageWidth, 8, 'F');
+            doc.setTextColor(255, 255, 255); doc.text("DATOS DE LA SUCURSAL", marginL + 3, y + 5.5); y += 8;
+            doc.setTextColor(0, 0, 0); doc.setFont("helvetica", "normal"); doc.rect(marginL, y, pageWidth, 16);
             doc.text(`Cliente / Sucursal: ${v.Cliente} - ${v.Sucursal}`, marginL + 3, y + 6);
             doc.text(`Fecha: ${v.Fecha}`, marginL + 130, y + 6);
-            
-            doc.line(marginL, y + 8, marginL + pageWidth, y + 8); // linea divisoria
-            
+            doc.line(marginL, y + 8, marginL + pageWidth, y + 8);
             doc.text(`Dirección: ${v.Direccion.substring(0, 75)}`, marginL + 3, y + 13);
             doc.text(`Hora: ${v.Hora}`, marginL + 130, y + 13);
-            
             y += 20;
 
-            // --- EQUIPOS ---
-            doc.setFillColor(30, 30, 30);
-            doc.rect(marginL, y, pageWidth, 8, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFont("helvetica", "bold");
-            doc.text("EQUIPOS REVISADOS", marginL + 3, y + 5.5);
-            y += 8;
-
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(9);
-            // Cabecera tabla
-            doc.rect(marginL, y, pageWidth, 7);
-            doc.text("EQUIPO", marginL + 3, y + 5);
-            doc.text("S/N", marginL + 40, y + 5);
-            doc.text("DESCRIPCIÓN / OBSERVACIONES", marginL + 90, y + 5);
-            y += 7;
+            doc.setFillColor(30, 30, 30); doc.rect(marginL, y, pageWidth, 8, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.text("EQUIPOS REVISADOS", marginL + 3, y + 5.5); y += 8;
+            doc.setTextColor(0, 0, 0); doc.setFontSize(9); doc.rect(marginL, y, pageWidth, 7);
+            doc.text("EQUIPO", marginL + 3, y + 5); doc.text("S/N", marginL + 40, y + 5); doc.text("DESCRIPCIÓN / OBSERVACIONES", marginL + 90, y + 5); y += 7;
 
             doc.setFont("helvetica", "normal");
-            
             const drawRow = (label, sn, obs) => {
                 if (sn || obs) {
                     doc.rect(marginL, y, pageWidth, 7);
-                    doc.text(label, marginL + 3, y + 5);
-                    doc.text(sn || '', marginL + 40, y + 5);
-                    doc.text(obs || '', marginL + 90, y + 5);
-                    y += 7;
+                    doc.text(label, marginL + 3, y + 5); doc.text(sn || '', marginL + 40, y + 5); doc.text(obs || '', marginL + 90, y + 5); y += 7;
                 }
             };
 
-            drawRow("Máquina 1", v.Maquina1_SN, v.Maquina1_Obs);
-            drawRow("Máquina 2", v.Maquina2_SN, v.Maquina2_Obs);
-            drawRow("Máquina 3", v.Maquina3_SN, v.Maquina3_Obs);
-            drawRow("Molino 1", v.Molino1_SN, v.Molino1_Obs);
-            drawRow("Molino 2", v.Molino2_SN, v.Molino2_Obs);
+            drawRow("Máquina 1", v.Maquina1_SN, v.Maquina1_Obs); drawRow("Máquina 2", v.Maquina2_SN, v.Maquina2_Obs); drawRow("Máquina 3", v.Maquina3_SN, v.Maquina3_Obs);
+            drawRow("Molino 1", v.Molino1_SN, v.Molino1_Obs); drawRow("Molino 2", v.Molino2_SN, v.Molino2_Obs); y += 5;
 
-            y += 5;
-
-            // Tipo Servicio y Accesorios
-            doc.setFontSize(9);
-            doc.text("Tipo de Servicio:", marginL, y);
+            doc.setFontSize(9); doc.text("Tipo de Servicio:", marginL, y);
             let tsStr = [];
             if(v.Tipo_Espresso === 'true' || v.Tipo_Espresso === true) tsStr.push("Espresso");
             if(v.Tipo_Filtro === 'true' || v.Tipo_Filtro === true) tsStr.push("Filtro");
             if(v.Tipo_Metodos === 'true' || v.Tipo_Metodos === true) tsStr.push("Métodos");
             if(v.Tipo_Otro === 'true' || v.Tipo_Otro === true) tsStr.push(`Otro (${v.Tipo_Otro_Descripcion})`);
-            doc.text(tsStr.join(", ") || "N/A", marginL + 35, y);
+            doc.text(tsStr.join(", ") || "N/A", marginL + 35, y); y += 5;
             
-            y += 5;
             doc.text("Accesorios:", marginL, y);
             let accStr = [];
             if(v.Acc_Cafiza === 'true' || v.Acc_Cafiza === true) accStr.push("Cafiza");
@@ -1045,76 +978,44 @@
             if(v.Acc_Cepillo === 'true' || v.Acc_Cepillo === true) accStr.push("Cepillo");
             if(v.Acc_ManeralDoble === 'true' || v.Acc_ManeralDoble === true) accStr.push("Maneral Doble");
             if(v.Acc_ManeralSencillo === 'true' || v.Acc_ManeralSencillo === true) accStr.push("Maneral Sencillo");
-            doc.text(accStr.join(", ") || "N/A", marginL + 35, y);
+            doc.text(accStr.join(", ") || "N/A", marginL + 35, y); y += 10;
 
-            y += 10;
-
-            // --- TEXTAREAS (Resumen y Cotizaciones) ---
             const drawSection = (title, textContent, minLines) => {
-                doc.setFillColor(30, 30, 30);
-                doc.rect(marginL, y, pageWidth, 8, 'F');
-                doc.setTextColor(255, 255, 255);
-                doc.setFont("helvetica", "bold");
-                doc.text(title, marginL + 3, y + 5.5);
-                y += 8;
-
-                doc.setTextColor(0, 0, 0);
-                doc.setFont("helvetica", "normal");
+                doc.setFillColor(30, 30, 30); doc.rect(marginL, y, pageWidth, 8, 'F');
+                doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.text(title, marginL + 3, y + 5.5); y += 8;
+                doc.setTextColor(0, 0, 0); doc.setFont("helvetica", "normal");
                 
                 let lines = doc.splitTextToSize(textContent || '', pageWidth - 6);
                 let linesCount = Math.max(lines.length, minLines);
-                
                 doc.rect(marginL, y, pageWidth, linesCount * 6 + 4);
                 
-                for(let i=0; i<lines.length; i++){
-                    doc.text(lines[i], marginL + 3, y + 6 + (i*6));
-                }
-                // Dibujar lineas guia horizontales
-                for(let i=1; i<=linesCount; i++){
-                    doc.setDrawColor(200);
-                    doc.line(marginL + 1, y + (i*6) + 1, marginL + pageWidth - 1, y + (i*6) + 1);
-                }
-                doc.setDrawColor(0);
-                y += (linesCount * 6 + 10);
+                for(let i=0; i<lines.length; i++) doc.text(lines[i], marginL + 3, y + 6 + (i*6));
+                for(let i=1; i<=linesCount; i++){ doc.setDrawColor(200); doc.line(marginL + 1, y + (i*6) + 1, marginL + pageWidth - 1, y + (i*6) + 1); }
+                doc.setDrawColor(0); y += (linesCount * 6 + 10);
             };
 
             drawSection("RESUMEN DE VISITA", v.Resumen_Visita, 4);
-            
             if (y > 230) { doc.addPage(); y = 20; }
-            
             drawSection("COTIZACIONES Y PENDIENTES", v.Cotizaciones_Pendientes, 3);
-
             if (y > 220) { doc.addPage(); y = 20; }
 
-            // --- COMENTARIOS DEL CLIENTE ---
-            doc.setFont("helvetica", "bold");
-            doc.text("COMENTARIOS Y CALIDAD", 105, y, {align: 'center'});
-            y += 6;
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(9);
-            doc.text("¿Tiene comentarios o sugerencias sobre el sabor del café? DESCRÍBALOS A CONTINUACIÓN:", 105, y, {align: 'center'});
-            y += 3;
+            doc.setFont("helvetica", "bold"); doc.text("COMENTARIOS Y CALIDAD", 105, y, {align: 'center'}); y += 6;
+            doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+            doc.text("¿Tiene comentarios o sugerencias sobre el sabor del café? DESCRÍBALOS A CONTINUACIÓN:", 105, y, {align: 'center'}); y += 3;
             doc.rect(marginL, y, pageWidth, 20);
             let comments = doc.splitTextToSize(v.Comentarios_Cliente || 'Ninguno.', pageWidth - 6);
-            doc.text(comments, marginL + 3, y + 6);
-            y += 35;
+            doc.text(comments, marginL + 3, y + 6); y += 35;
 
-            // --- FIRMAS ---
             doc.line(marginL + 10, y, marginL + 80, y);
             doc.text("Nombre y Firma del Asesor / Técnico", marginL + 45, y + 5, {align: 'center'});
-            doc.setFont("helvetica", "bold");
-            doc.text(v.Tecnico, marginL + 45, y - 2, {align: 'center'});
+            doc.setFont("helvetica", "bold"); doc.text(v.Tecnico, marginL + 45, y - 2, {align: 'center'});
             doc.setFont("helvetica", "normal");
 
             doc.line(marginL + 100, y, marginL + 170, y);
             doc.text("Nombre y Firma del Cliente", marginL + 135, y + 5, {align: 'center'});
 
-            // --- FOOTER ---
-            doc.setFontSize(8);
-            doc.setTextColor(100);
+            doc.setFontSize(8); doc.setTextColor(100);
             doc.text("SSC GOURMET DISTRIBUTION | ¿Dudas o comentarios? Contacto: admin@coperaco.mx | Contacta a tu asesor comercial.", 105, 285, {align: 'center'});
-
-            // Save
             doc.save(`SSC_Reporte_${v.Cliente.replace(/\s+/g, '')}_${v.Fecha}.pdf`);
         }
     </script>
